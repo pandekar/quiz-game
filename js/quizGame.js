@@ -1,5 +1,5 @@
 import { fetchQuestions } from './api.js';
-import { shuffleArray, decodeHTML } from './utils.js';
+import { shuffleArray, decodeHTML, isStorageExist } from './utils.js';
 import {
   SELECT_ANSWER,
   CHECK_ANSWER,
@@ -15,22 +15,67 @@ const startBtn = document.getElementById('start-btn');
 const timerEl = document.getElementById('time-value');
 const scoreEl = document.getElementById('score-value');
 const difficultySelector = document.getElementById('difficulty');
+const recentGamesListEl = document.getElementById('recent-games');
+const recentGamesContainer = document.getElementById('recent-games-container');
 
 // Game state variables
+const defaultTime = 30;
 let currentQuestion = 0;
 let score = 0;
 let timer = null;
-let timeLeft = 30; // in seconds
+let timeLeft = defaultTime; // in seconds
 let questions = [];
 let answerSelected = null;
+let gameHistories = [];
 const SUBMIT_ANSWER = 'SUBMIT_ANSWER';
+const STORAGE_KEY = 'QUIZ-GAME';
+
+const _renderRecentMatches = () => {
+  recentGamesListEl.innerHTML = gameHistories
+    .map((record, index) => {
+      const {
+        dateTime,
+        difficulty,
+        timeSpent,
+        score
+      } = record;
+      const dateObj = new Date(dateTime);
+
+      return `
+        <tr id='${dateTime}'>
+          <th scope='row'>${index + 1}</th>
+          <td>${dateObj.toDateString()}</td>
+          <td>${dateObj.toLocaleTimeString()}</td>
+          <td>${difficulty}</td>
+          <td>${timeSpent}</td>
+          <td>${score}</td>
+        </tr>
+      `
+    })
+    .join('');
+};
 
 export function initQuizGame() {
   startBtn.addEventListener('click', startQuiz);
+
+  // render game history
+  if (isStorageExist()) {
+    const parsedData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (parsedData !== null) {
+      recentGamesContainer.removeAttribute('style');
+      for (const i in parsedData) {
+        gameHistories.unshift(parsedData[i])
+      }
+      _renderRecentMatches();
+    } else {
+      recentGamesContainer.style.display = 'none';  
+    }
+  }
 };
 
 export async function startQuiz() {
   try {
+    recentGamesContainer.style.display = 'none';
     answersEl.innerHTML = '';
     answersEl.removeAttribute('style');
 
@@ -149,8 +194,28 @@ export function endQuiz() {
   answersEl.style.display = 'none';
 
   startBtn.removeAttribute("style");
+  recentGamesContainer.removeAttribute('style');
 
   difficultySelector.disabled = false;
+
+  if (isStorageExist()) {
+    const gameHistory = {
+      dateTime: new Date(),
+      difficulty: difficultySelector.value,
+      timeSpent: defaultTime - timeLeft,
+      score
+    };
+
+    gameHistories.unshift(gameHistory);
+    if (gameHistories.length > 5) {
+      gameHistories.pop();
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameHistories))
+  }
+
+  recentGamesListEl.innerHTML = '';
+  _renderRecentMatches();
 };
 
 document.addEventListener(SUBMIT_ANSWER, ({ detail }) => {

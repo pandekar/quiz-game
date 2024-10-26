@@ -12,3 +12,12 @@ export function decodeHTML(html) {
   txt.innerHTML = html;
   return txt.value;
 }
+
+export const isStorageExist = () => {
+  if (typeof (Storage) === undefined) {
+    alert('your browser does not support local storage');
+    return false;
+  }
+
+  return true;
+};
