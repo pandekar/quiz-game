@@ -111,7 +111,6 @@ export function showQuestion(questionData) {
  * @param {string} formId 
  */
 export function checkAnswer(selectedAnswer, correctAnswer, formId) {
-  console.log('correct answer', correctAnswer);
   if (selectedAnswer === correctAnswer) { 
     score += 1;
 
@@ -128,38 +127,38 @@ export function checkAnswer(selectedAnswer, correctAnswer, formId) {
 };
 
 /**
- * TODO: Implement the startTimer function
+ * startTimer
  * 1. Set up an interval to decrease timeLeft
  * 2. Update the timer display
  * 3. End the quiz if time runs out
  */
 export function startTimer() {
-  const startCountdown = setInterval(() => {
+  timer = setInterval(() => {
     timeLeft -= 1;
     timerEl.textContent = timeLeft
 
     if (timeLeft === 0) {
-      clearInterval(startCountdown);
-
       endQuiz();
     }
   }, 1000);
 };
 
+/**
+ * endQuiz
+ * 1. Clear the timer
+ * 2. Display the final score
+ * 3. Show the start button again
+ * 4. Re-enable the difficulty selector
+ */
 export function endQuiz() {
-  // TODO: Implement the endQuiz function
-  // TODO: endgame mechanism when user complete all the questions before the time ends
-  // 1. Clear the timer
-  // 2. Display the final score
-  // 3. Show the start button again
-  // 4. Re-enable the difficulty selector
+  clearInterval(timer);
 
   questionEl.innerText = 'Quiz finished!';
-
-  // hide answer section element
   answersEl.style.display = 'none';
 
   startBtn.removeAttribute("style");
+
+  difficultySelector.disabled = false;
 };
 
 document.addEventListener(CORRECT_ANSWER, ({ detail }) => {
@@ -174,5 +173,5 @@ document.addEventListener(CORRECT_ANSWER, ({ detail }) => {
     return;
   }
 
-  questionEl.innerText = 'Quiz finished!';
+  endQuiz();
 });
