@@ -1,5 +1,12 @@
 import { fetchQuestions } from './api.js';
 import { shuffleArray, decodeHTML } from './utils.js';
+import {
+  SELECT_ANSWER,
+  CHECK_ANSWER,
+  _createAnswerButtonElement,
+  _createLabelAnswerElement,
+  _createRadioButtonAnswerElement
+} from './ui.js';
 
 const quizContainer = document.getElementById('quiz-container');
 const questionEl = document.getElementById('question');
@@ -47,62 +54,6 @@ export async function startQuiz() {
 };
 
 /**
- * _createAnswerButtonElement
- * @param {string} formId 
- * @param {Object} questionData 
- * @returns {HTMLButtonElement}
- * @private
- */
-const _createAnswerButtonElement = (formId, questionData) => {
-  const formAnswerButtonElement = document.createElement('button');
-  formAnswerButtonElement.type = 'submit';
-  formAnswerButtonElement.innerText = 'submit';
-  formAnswerButtonElement.addEventListener('click', (e) => {
-    e.preventDefault();
-    const correctAnswer = decodeHTML(questionData.correct_answer);
-
-    checkAnswer(answerSelected, correctAnswer, formId);
-  });
-
-  return formAnswerButtonElement;
-};
-
-/**
- * _createRadioButtonAnswerElement
- * @param {Array<string>} answers 
- * @param {string} index 
- * @returns {HTMLInputElement}
- * @private
- */
-const _createRadioButtonAnswerElement = (answers, index) => {
-  const radioButtonAnswerElement = document.createElement('input');
-  radioButtonAnswerElement.type = 'radio'
-  radioButtonAnswerElement.id = `answer-${index}`;
-  radioButtonAnswerElement.name = 'answer';
-  radioButtonAnswerElement.value = decodeHTML(answers[index]);
-  radioButtonAnswerElement.addEventListener('click', (e) => {
-    answerSelected = e.target.value;
-  });
-
-  return radioButtonAnswerElement;
-};
-
-/**
- * _createLabelAnswerElement
- * @param {Array<string>} answers 
- * @param {string} index 
- * @returns {HTMLLabelElement}
- * @private
- */
-const _createLabelAnswerElement = (answers, index) => {
-  const labelAnswerElement = document.createElement('label');
-  labelAnswerElement.setAttribute('for', `answer-${index}`);
-  labelAnswerElement.innerText = decodeHTML(answers[index]);
-
-  return labelAnswerElement;
-};
-
-/**
  * showQuestion
  * 1. Set the question text
  * 2. Clear previous answer buttons
@@ -120,12 +71,14 @@ export function showQuestion(questionData) {
   const formAnswerRadioButtonSectionElement = document.createElement('fieldset');
   const formAnswerButtonSectionElement = document.createElement('div');
   
-  const formAnswerButtonElement = _createAnswerButtonElement(formId, questionData);
+  const decodedCorrectAnswer = decodeHTML(questionData.correct_answer);
+  const formAnswerButtonElement = _createAnswerButtonElement(formId, decodedCorrectAnswer);
   formAnswerButtonSectionElement.appendChild(formAnswerButtonElement);
 
   for (const index in answers) {
-    const radioButtonAnswerElement = _createRadioButtonAnswerElement(answers, index);
-    const labelAnswerElement = _createLabelAnswerElement(answers, index);
+    const answer = decodeHTML(answers[index]);
+    const radioButtonAnswerElement = _createRadioButtonAnswerElement(answer, index);
+    const labelAnswerElement = _createLabelAnswerElement(answer, index);
 
     const answerSectionElement = document.createElement('div');
     answerSectionElement.appendChild(radioButtonAnswerElement);
@@ -149,8 +102,8 @@ export function showQuestion(questionData) {
  * @param {string} correctAnswer 
  * @param {string} formId 
  */
-export function checkAnswer(selectedAnswer, correctAnswer, formId) {
-  if (selectedAnswer === correctAnswer) { 
+export function checkAnswer(correctAnswer, formId) {
+  if (answerSelected === correctAnswer) { 
     score += 1;
   }
 
@@ -158,7 +111,7 @@ export function checkAnswer(selectedAnswer, correctAnswer, formId) {
     currentQuestion += 1;
 
     document.dispatchEvent(new CustomEvent(SUBMIT_ANSWER, {
-      detail : { formId }
+      detail: { formId }
     }));
   }
   
@@ -213,4 +166,16 @@ document.addEventListener(SUBMIT_ANSWER, ({ detail }) => {
   }
 
   endQuiz();
+});
+
+document.addEventListener(SELECT_ANSWER, ({ detail }) => {
+  const { selectedValue } = detail;
+  
+  answerSelected = selectedValue;
+});
+
+document.addEventListener(CHECK_ANSWER, ({ detail }) => {
+  const { correctAnswer, formId } = detail;
+
+  checkAnswer(correctAnswer, formId);
 });
