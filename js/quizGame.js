@@ -16,6 +16,7 @@ let timer = null;
 let timeLeft = 30; // in seconds
 let questions = [];
 let answerSelected = null;
+const CORRECT_ANSWER = 'CORRECT_ANSWER';
 
 export function initQuizGame() {
   startBtn.addEventListener('click', startQuiz);
@@ -42,16 +43,20 @@ export async function startQuiz() {
   }
 };
 
+/**
+ * showQuestion
+ * 1. Set the question text
+ * 2. Clear previous answer buttons
+ * 3. Create and append new answer buttons
+ * @param {Object} questionData 
+ */
 export function showQuestion(questionData) {
-  // TODO: Implement the showQuestion function
-  // 1. Set the question text
-  // 2. Clear previous answer buttons
-  // 3. Create and append new answer buttons
-  console.log('showQuestion', questionData);
-  questionEl.innerText = questionData.question;
+  questionEl.innerText = decodeHTML(questionData.question);
   const answers = [questionData.correct_answer, ...questionData.incorrect_answers];
   
   const formAnswerElement = document.createElement('form');
+  const formId = `quiz-form-${currentQuestion}`;
+  formAnswerElement.id = formId
   const formAnswerRadioButtonSectionElement = document.createElement('fieldset');
   const formAnswerButtonSectionElement = document.createElement('div');
   
@@ -60,7 +65,8 @@ export function showQuestion(questionData) {
   formAnswerButtonElement.innerText = 'submit';
   formAnswerButtonElement.addEventListener('click', (e) => {
     e.preventDefault();
-    checkAnswer(answerSelected, questionData.correct_answer);
+
+    checkAnswer(answerSelected, questionData.correct_answer, formId);
   });
   formAnswerButtonSectionElement.appendChild(formAnswerButtonElement);
 
@@ -69,14 +75,14 @@ export function showQuestion(questionData) {
     radioButtonAnswerElement.type = 'radio'
     radioButtonAnswerElement.id = `answer-${index}`;
     radioButtonAnswerElement.name = 'answer';
-    radioButtonAnswerElement.value = answers[index];
+    radioButtonAnswerElement.value = decodeHTML(answers[index]);
     radioButtonAnswerElement.addEventListener('click', (e) => {
       answerSelected = e.target.value;
     });
 
     const labelAnswerElement = document.createElement('label');
     labelAnswerElement.setAttribute('for', `answer-${index}`);
-    labelAnswerElement.innerText = answers[index];    
+    labelAnswerElement.innerText = decodeHTML(answers[index]);
 
     const answerSectionElement = document.createElement('div');
     answerSectionElement.appendChild(radioButtonAnswerElement);
@@ -91,16 +97,29 @@ export function showQuestion(questionData) {
   answersEl.appendChild(formAnswerElement);
 };
 
-export function checkAnswer(selectedAnswer, correctAnswer) {
-  // TODO: Implement the checkAnswer function
-  // 1. Check if the selected answer is correct
-  // 2. Update the score if correct
-  // 3. Move to the next question or end the quiz
-  console.log('checkAnswer', selectedAnswer, correctAnswer);
-
-  if (selectedAnswer === correctAnswer) {
+/**
+ * checkAnswer
+ * 1. Check if the selected answer is correct
+ * 2. Update the score if correct
+ * 3. Move to the next question or end the quiz
+ * @param {string} selectedAnswer 
+ * @param {string} correctAnswer 
+ * @param {string} formId 
+ */
+export function checkAnswer(selectedAnswer, correctAnswer, formId) {
+  console.log('correct answer', correctAnswer);
+  if (selectedAnswer === correctAnswer) { 
     score += 1;
+
+    if (questions.length > currentQuestion) {
+      currentQuestion += 1;
+
+      document.dispatchEvent(new CustomEvent(CORRECT_ANSWER, {
+        detail : { formId }
+      }));
+    }
   }
+  
   scoreEl.textContent = score;
 };
 
@@ -118,3 +137,18 @@ export function endQuiz() {
   // 3. Show the start button again
   // 4. Re-enable the difficulty selector
 };
+
+document.addEventListener(CORRECT_ANSWER, ({ detail }) => {
+  const { formId } = detail;
+
+  const hidePreviousForm = document.getElementById(formId);
+  hidePreviousForm.setAttribute('class', 'hide')
+
+  if (currentQuestion < questions.length) {
+    showQuestion(questions[currentQuestion]);
+
+    return;
+  }
+
+  questionEl.innerText = 'Quiz finished!';
+});
