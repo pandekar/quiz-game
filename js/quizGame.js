@@ -24,6 +24,9 @@ export function initQuizGame() {
 
 export async function startQuiz() {
   try {
+    answersEl.innerHTML = '';
+    answersEl.removeAttribute('style');
+
     startBtn.style.display = 'none';
     difficultySelector.disabled = true;
     quizContainer.style.display = 'block';
@@ -65,8 +68,9 @@ export function showQuestion(questionData) {
   formAnswerButtonElement.innerText = 'submit';
   formAnswerButtonElement.addEventListener('click', (e) => {
     e.preventDefault();
+    const correctAnswer = decodeHTML(questionData.correct_answer);
 
-    checkAnswer(answerSelected, questionData.correct_answer, formId);
+    checkAnswer(answerSelected, correctAnswer, formId);
   });
   formAnswerButtonSectionElement.appendChild(formAnswerButtonElement);
 
@@ -123,27 +127,39 @@ export function checkAnswer(selectedAnswer, correctAnswer, formId) {
   scoreEl.textContent = score;
 };
 
-// TODO: Implement the startTimer function
-// 1. Set up an interval to decrease timeLeft
-// 2. Update the timer display
-// 3. End the quiz if time runs out
+/**
+ * TODO: Implement the startTimer function
+ * 1. Set up an interval to decrease timeLeft
+ * 2. Update the timer display
+ * 3. End the quiz if time runs out
+ */
 export function startTimer() {
   const startCountdown = setInterval(() => {
     timeLeft -= 1;
     timerEl.textContent = timeLeft
 
     if (timeLeft === 0) {
-      clearInterval(startCountdown)
+      clearInterval(startCountdown);
+
+      endQuiz();
     }
   }, 1000);
 };
 
 export function endQuiz() {
   // TODO: Implement the endQuiz function
+  // TODO: endgame mechanism when user complete all the questions before the time ends
   // 1. Clear the timer
   // 2. Display the final score
   // 3. Show the start button again
   // 4. Re-enable the difficulty selector
+
+  questionEl.innerText = 'Quiz finished!';
+
+  // hide answer section element
+  answersEl.style.display = 'none';
+
+  startBtn.removeAttribute("style");
 };
 
 document.addEventListener(CORRECT_ANSWER, ({ detail }) => {
