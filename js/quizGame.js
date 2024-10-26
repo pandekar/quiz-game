@@ -16,7 +16,7 @@ let timer = null;
 let timeLeft = 30; // in seconds
 let questions = [];
 let answerSelected = null;
-const CORRECT_ANSWER = 'CORRECT_ANSWER';
+const SUBMIT_ANSWER = 'SUBMIT_ANSWER';
 
 export function initQuizGame() {
   startBtn.addEventListener('click', startQuiz);
@@ -47,6 +47,62 @@ export async function startQuiz() {
 };
 
 /**
+ * _createAnswerButtonElement
+ * @param {string} formId 
+ * @param {Object} questionData 
+ * @returns {HTMLButtonElement}
+ * @private
+ */
+const _createAnswerButtonElement = (formId, questionData) => {
+  const formAnswerButtonElement = document.createElement('button');
+  formAnswerButtonElement.type = 'submit';
+  formAnswerButtonElement.innerText = 'submit';
+  formAnswerButtonElement.addEventListener('click', (e) => {
+    e.preventDefault();
+    const correctAnswer = decodeHTML(questionData.correct_answer);
+
+    checkAnswer(answerSelected, correctAnswer, formId);
+  });
+
+  return formAnswerButtonElement;
+};
+
+/**
+ * _createRadioButtonAnswerElement
+ * @param {Array<string>} answers 
+ * @param {string} index 
+ * @returns {HTMLInputElement}
+ * @private
+ */
+const _createRadioButtonAnswerElement = (answers, index) => {
+  const radioButtonAnswerElement = document.createElement('input');
+  radioButtonAnswerElement.type = 'radio'
+  radioButtonAnswerElement.id = `answer-${index}`;
+  radioButtonAnswerElement.name = 'answer';
+  radioButtonAnswerElement.value = decodeHTML(answers[index]);
+  radioButtonAnswerElement.addEventListener('click', (e) => {
+    answerSelected = e.target.value;
+  });
+
+  return radioButtonAnswerElement;
+};
+
+/**
+ * _createLabelAnswerElement
+ * @param {Array<string>} answers 
+ * @param {string} index 
+ * @returns {HTMLLabelElement}
+ * @private
+ */
+const _createLabelAnswerElement = (answers, index) => {
+  const labelAnswerElement = document.createElement('label');
+  labelAnswerElement.setAttribute('for', `answer-${index}`);
+  labelAnswerElement.innerText = decodeHTML(answers[index]);
+
+  return labelAnswerElement;
+};
+
+/**
  * showQuestion
  * 1. Set the question text
  * 2. Clear previous answer buttons
@@ -64,30 +120,12 @@ export function showQuestion(questionData) {
   const formAnswerRadioButtonSectionElement = document.createElement('fieldset');
   const formAnswerButtonSectionElement = document.createElement('div');
   
-  const formAnswerButtonElement = document.createElement('button');
-  formAnswerButtonElement.type = 'submit';
-  formAnswerButtonElement.innerText = 'submit';
-  formAnswerButtonElement.addEventListener('click', (e) => {
-    e.preventDefault();
-    const correctAnswer = decodeHTML(questionData.correct_answer);
-
-    checkAnswer(answerSelected, correctAnswer, formId);
-  });
+  const formAnswerButtonElement = _createAnswerButtonElement(formId, questionData);
   formAnswerButtonSectionElement.appendChild(formAnswerButtonElement);
 
   for (const index in answers) {
-    const radioButtonAnswerElement = document.createElement('input');
-    radioButtonAnswerElement.type = 'radio'
-    radioButtonAnswerElement.id = `answer-${index}`;
-    radioButtonAnswerElement.name = 'answer';
-    radioButtonAnswerElement.value = decodeHTML(answers[index]);
-    radioButtonAnswerElement.addEventListener('click', (e) => {
-      answerSelected = e.target.value;
-    });
-
-    const labelAnswerElement = document.createElement('label');
-    labelAnswerElement.setAttribute('for', `answer-${index}`);
-    labelAnswerElement.innerText = decodeHTML(answers[index]);
+    const radioButtonAnswerElement = _createRadioButtonAnswerElement(answers, index);
+    const labelAnswerElement = _createLabelAnswerElement(answers, index);
 
     const answerSectionElement = document.createElement('div');
     answerSectionElement.appendChild(radioButtonAnswerElement);
@@ -114,14 +152,14 @@ export function showQuestion(questionData) {
 export function checkAnswer(selectedAnswer, correctAnswer, formId) {
   if (selectedAnswer === correctAnswer) { 
     score += 1;
+  }
 
-    if (questions.length > currentQuestion) {
-      currentQuestion += 1;
+  if (questions.length > currentQuestion) {
+    currentQuestion += 1;
 
-      document.dispatchEvent(new CustomEvent(CORRECT_ANSWER, {
-        detail : { formId }
-      }));
-    }
+    document.dispatchEvent(new CustomEvent(SUBMIT_ANSWER, {
+      detail : { formId }
+    }));
   }
   
   scoreEl.textContent = score;
@@ -162,7 +200,7 @@ export function endQuiz() {
   difficultySelector.disabled = false;
 };
 
-document.addEventListener(CORRECT_ANSWER, ({ detail }) => {
+document.addEventListener(SUBMIT_ANSWER, ({ detail }) => {
   const { formId } = detail;
 
   const hidePreviousForm = document.getElementById(formId);
