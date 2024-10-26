@@ -123,11 +123,19 @@ export function checkAnswer(selectedAnswer, correctAnswer, formId) {
   scoreEl.textContent = score;
 };
 
+// TODO: Implement the startTimer function
+// 1. Set up an interval to decrease timeLeft
+// 2. Update the timer display
+// 3. End the quiz if time runs out
 export function startTimer() {
-  // TODO: Implement the startTimer function
-  // 1. Set up an interval to decrease timeLeft
-  // 2. Update the timer display
-  // 3. End the quiz if time runs out
+  const startCountdown = setInterval(() => {
+    timeLeft -= 1;
+    timerEl.textContent = timeLeft
+
+    if (timeLeft === 0) {
+      clearInterval(startCountdown)
+    }
+  }, 1000);
 };
 
 export function endQuiz() {
