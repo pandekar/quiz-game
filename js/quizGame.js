@@ -56,6 +56,7 @@ export async function startQuiz() {
 export function showQuestion(questionData) {
   questionEl.innerText = decodeHTML(questionData.question);
   const answers = [questionData.correct_answer, ...questionData.incorrect_answers];
+  shuffleArray(answers);
   
   const formAnswerElement = document.createElement('form');
   const formId = `quiz-form-${currentQuestion}`;
