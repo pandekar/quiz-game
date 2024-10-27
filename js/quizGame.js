@@ -55,21 +55,26 @@ const _renderRecentMatches = () => {
     .join('');
 };
 
+const _loadExistingData = () => {
+  const parsedData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (parsedData !== null) {
+      recentGamesContainer.removeAttribute('style');
+      for (const i in parsedData) {
+        gameHistories.push(parsedData[i])
+      }
+
+      _renderRecentMatches();
+    } else {
+      recentGamesContainer.style.display = 'none';  
+    }
+};
+
 export function initQuizGame() {
   startBtn.addEventListener('click', startQuiz);
 
   // render game history
   if (isStorageExist()) {
-    const parsedData = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (parsedData !== null) {
-      recentGamesContainer.removeAttribute('style');
-      for (const i in parsedData) {
-        gameHistories.unshift(parsedData[i])
-      }
-      _renderRecentMatches();
-    } else {
-      recentGamesContainer.style.display = 'none';  
-    }
+    _loadExistingData();
   }
 };
 
