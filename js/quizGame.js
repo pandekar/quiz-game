@@ -1,4 +1,8 @@
-import { fetchQuestions } from './api.js';
+import {
+  FETCHING,
+  FETCHING_DONE,
+  fetchQuestions
+} from './api.js';
 import { shuffleArray, decodeHTML, isStorageExist } from './utils.js';
 import {
   SELECT_ANSWER,
@@ -17,6 +21,7 @@ const scoreEl = document.getElementById('score-value');
 const difficultySelector = document.getElementById('difficulty');
 const recentGamesListEl = document.getElementById('recent-games');
 const recentGamesContainer = document.getElementById('recent-games-container');
+const loadingTextEl = document.getElementById('loading-text');
 
 // Game state variables
 const defaultTime = 30;
@@ -248,4 +253,13 @@ document.addEventListener(CHECK_ANSWER, ({ detail }) => {
   const { correctAnswer, formId } = detail;
 
   checkAnswer(correctAnswer, formId);
+});
+
+document.addEventListener(FETCHING, () => {
+  loadingTextEl.removeAttribute('style');
+  questionEl.innerText = '';
+});
+
+document.addEventListener(FETCHING_DONE, () => {
+  loadingTextEl.style.display = 'none';
 });
